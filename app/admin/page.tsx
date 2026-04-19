@@ -22,7 +22,7 @@ export default function AdminPage() {
   const [pending, setPending] = useState<Profile[]>([])
   const [shifts, setShifts] = useState<Shift[]>([])
   const [rates, setRates] = useState<Rate[]>([])
-  const [users, setUsers] = useState<any[]>([])
+  const [users, setUsers] = useState<Profile[]>([])
   const [loading, setLoading] = useState(false)
   const [feedback, setFeedback] = useState<string | null>(null)
   const [editingShift, setEditingShift] = useState<string | null>(null)
@@ -63,9 +63,9 @@ export default function AdminPage() {
       setRates(data || [])
     }
     if (tab === 'reports') {
-      const { data } = await supabase.from('profiles').select('id, full_name, cargo, rut')
+      const { data } = await supabase.from('profiles').select('id, full_name, cargo, rut, sis_registro, email, status, created_at')
         .eq('status', 'approved').order('full_name')
-      setUsers(data || [])
+      setUsers((data as Profile[]) || [])
     }
     setLoading(false)
   }
@@ -203,6 +203,7 @@ export default function AdminPage() {
 
   return (
     <div style={S.page}>
+      {/* SIDEBAR */}
       <aside style={S.sidebar}>
         <div style={S.brand}>
           <img src="/logo.png" alt="Logo" style={{ width: 36, height: 40, objectFit: 'contain' }} />
@@ -230,14 +231,19 @@ export default function AdminPage() {
           style={S.logoutBtn}>Cerrar sesión</button>
       </aside>
 
+      {/* MAIN */}
       <main style={S.main}>
         {feedback && <div style={S.feedback}>{feedback}</div>}
+
         {loading && <div style={{ color: '#6B7280', fontSize: 14, padding: '20px 0' }}>Cargando...</div>}
 
+        {/* ── PENDIENTES ── */}
         {tab === 'pending' && !loading && (
           <>
             <h2 style={S.sectionTitle}>Solicitudes pendientes de aprobación</h2>
-            {pending.length === 0 && <div style={S.empty}>No hay solicitudes pendientes ✓</div>}
+            {pending.length === 0 && (
+              <div style={S.empty}>No hay solicitudes pendientes ✓</div>
+            )}
             {pending.map(u => (
               <div key={u.id} style={S.card}>
                 <div style={S.cardRow}>
@@ -262,6 +268,7 @@ export default function AdminPage() {
           </>
         )}
 
+        {/* ── MARCAJES ── */}
         {tab === 'shifts' && !loading && (
           <>
             <h2 style={S.sectionTitle}>Historial de marcajes — últimos 150</h2>
@@ -281,20 +288,28 @@ export default function AdminPage() {
                         <div style={{ fontWeight: 700, fontSize: 13 }}>{s.profiles?.full_name}</div>
                         <div style={{ fontSize: 11, color: '#9CA3AF' }}>{s.profiles?.rut}</div>
                       </td>
-                      <td style={S.td}><span style={S.pill}>{CARGO[s.profiles?.cargo]}</span></td>
                       <td style={S.td}>
-                        {editingShift === s.id ? (
-                          <input type="datetime-local" defaultValue={s.check_in?.slice(0, 16)}
-                            onChange={e => setShiftEdits(p => ({ ...p, [s.id]: { ...p[s.id], check_in: e.target.value } }))}
-                            style={S.editInput} />
-                        ) : <span style={{ fontSize: 12 }}>{fmtDT(s.check_in)}</span>}
+                        <span style={S.pill}>{CARGO[s.profiles?.cargo]}</span>
                       </td>
                       <td style={S.td}>
                         {editingShift === s.id ? (
-                          <input type="datetime-local" defaultValue={s.check_out?.slice(0, 16) || ''}
+                          <input type="datetime-local"
+                            defaultValue={s.check_in?.slice(0, 16)}
+                            onChange={e => setShiftEdits(p => ({ ...p, [s.id]: { ...p[s.id], check_in: e.target.value } }))}
+                            style={S.editInput} />
+                        ) : (
+                          <span style={{ fontSize: 12 }}>{fmtDT(s.check_in)}</span>
+                        )}
+                      </td>
+                      <td style={S.td}>
+                        {editingShift === s.id ? (
+                          <input type="datetime-local"
+                            defaultValue={s.check_out?.slice(0, 16) || ''}
                             onChange={e => setShiftEdits(p => ({ ...p, [s.id]: { ...p[s.id], check_out: e.target.value } }))}
                             style={S.editInput} />
-                        ) : <span style={{ fontSize: 12 }}>{fmtDT(s.check_out)}</span>}
+                        ) : (
+                          <span style={{ fontSize: 12 }}>{fmtDT(s.check_out)}</span>
+                        )}
                       </td>
                       <td style={S.td}>
                         <span style={{ fontSize: 12, color: s.check_in_within_radius ? '#065F46' : '#991B1B', fontWeight: 600 }}>
@@ -309,7 +324,8 @@ export default function AdminPage() {
                       <td style={S.td}>
                         {editingShift === s.id ? (
                           <div style={{ display: 'flex', gap: 6, flexDirection: 'column' }}>
-                            <input placeholder="Nota de corrección..." defaultValue={s.notes || ''}
+                            <input placeholder="Nota de corrección..."
+                              defaultValue={s.notes || ''}
                               onChange={e => setShiftEdits(p => ({ ...p, [s.id]: { ...p[s.id], notes: e.target.value } }))}
                               style={S.editInput} />
                             <div style={{ display: 'flex', gap: 4 }}>
@@ -318,7 +334,9 @@ export default function AdminPage() {
                             </div>
                           </div>
                         ) : (
-                          <button onClick={() => setEditingShift(s.id)} style={S.editBtn}>✏ Editar</button>
+                          <button onClick={() => setEditingShift(s.id)} style={S.editBtn}>
+                            ✏ Editar
+                          </button>
                         )}
                       </td>
                     </tr>
@@ -329,23 +347,25 @@ export default function AdminPage() {
           </>
         )}
 
+        {/* ── TARIFAS ── */}
         {tab === 'rates' && !loading && (
           <>
             <h2 style={S.sectionTitle}>Tarifas de honorario por turno</h2>
             <p style={{ color: '#6B7280', fontSize: 13, marginBottom: 20 }}>
-              Edita el valor y haz clic fuera del campo para guardar.
+              Edita el valor y haz clic fuera del campo para guardar. Los cambios aplican a nuevos turnos completados.
             </p>
             {rates.map(r => (
               <div key={r.id} style={S.card}>
                 <div style={S.cardRow}>
                   <div>
                     <div style={S.cardName}>{CARGO[r.cargo]}</div>
-                    <div style={S.cardMeta}>Cargo: {r.cargo}</div>
+                    <div style={S.cardMeta}>Cargo en sistema: {r.cargo}</div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontWeight: 700, color: '#374151', fontSize: 16 }}>$</span>
                     <input type="number" defaultValue={r.amount_per_shift}
-                      onBlur={e => updateRate(r.id, Number(e.target.value))} style={S.rateInput} />
+                      onBlur={e => updateRate(r.id, Number(e.target.value))}
+                      style={S.rateInput} />
                     <span style={{ color: '#6B7280', fontSize: 13 }}>CLP / turno</span>
                   </div>
                 </div>
@@ -354,6 +374,7 @@ export default function AdminPage() {
           </>
         )}
 
+        {/* ── REPORTES ── */}
         {tab === 'reports' && !loading && (
           <>
             <h2 style={S.sectionTitle}>Generar reporte de honorarios</h2>
@@ -377,8 +398,12 @@ export default function AdminPage() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 10 }}>
-                <button onClick={() => exportReport('csv')} style={S.exportBtn}>⬇ Exportar Excel (.csv)</button>
-                <button onClick={() => exportReport('pdf')} style={{ ...S.exportBtn, background: '#0D2B5E' }}>🖨 Exportar PDF</button>
+                <button onClick={() => exportReport('csv')} style={S.exportBtn}>
+                  ⬇ Exportar Excel (.csv)
+                </button>
+                <button onClick={() => exportReport('pdf')} style={{ ...S.exportBtn, background: '#0D2B5E' }}>
+                  🖨 Exportar PDF
+                </button>
               </div>
             </div>
           </>
@@ -391,33 +416,85 @@ export default function AdminPage() {
 const DARK = '#0D2B5E', BLUE = '#1A4A9A'
 const S: Record<string, React.CSSProperties> = {
   page: { display: 'flex', minHeight: '100vh', fontFamily: "'DM Sans', Arial, sans-serif", background: '#F0F5FF' },
-  sidebar: { width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${DARK} 0%, ${BLUE} 100%)`, minHeight: '100vh', padding: '0 0 20px' },
+  sidebar: {
+    width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column',
+    background: `linear-gradient(180deg, ${DARK} 0%, ${BLUE} 100%)`,
+    minHeight: '100vh', padding: '0 0 20px',
+  },
   brand: { display: 'flex', gap: 10, alignItems: 'center', padding: '24px 16px 20px', borderBottom: '1px solid rgba(255,255,255,0.1)', marginBottom: 8 },
   brandName: { color: '#fff', fontWeight: 700, fontSize: 13 },
   brandSub: { color: 'rgba(255,255,255,0.5)', fontSize: 11 },
-  navBtn: { width: '100%', padding: '11px 20px', border: 'none', borderRadius: 0, fontSize: 13, fontWeight: 500, cursor: 'pointer', textAlign: 'left' as const, transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between' },
-  badge: { background: '#DC2626', color: '#fff', borderRadius: 20, padding: '1px 7px', fontSize: 11, fontWeight: 700 },
-  logoutBtn: { margin: 'auto 12px 0', padding: '9px 16px', background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, fontSize: 12, cursor: 'pointer' },
+  navBtn: {
+    width: '100%', padding: '11px 20px', border: 'none', borderRadius: 0,
+    fontSize: 13, fontWeight: 500, cursor: 'pointer', textAlign: 'left' as const,
+    transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between',
+  },
+  badge: {
+    background: '#DC2626', color: '#fff', borderRadius: 20,
+    padding: '1px 7px', fontSize: 11, fontWeight: 700,
+  },
+  logoutBtn: {
+    margin: 'auto 12px 0', padding: '9px 16px',
+    background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)',
+    border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8,
+    fontSize: 12, cursor: 'pointer',
+  },
   main: { flex: 1, padding: '32px 40px', overflowX: 'auto' as const },
   sectionTitle: { fontSize: 20, fontWeight: 800, color: DARK, margin: '0 0 20px' },
-  feedback: { background: '#D1FAE5', border: '1px solid #6EE7B7', color: '#065F46', borderRadius: 10, padding: '10px 16px', fontSize: 13, fontWeight: 600, marginBottom: 20 },
-  empty: { background: '#F0FDF4', border: '1px solid #BBF7D0', color: '#065F46', borderRadius: 12, padding: '20px', fontSize: 14, textAlign: 'center' as const },
-  card: { background: '#fff', borderRadius: 14, border: '1px solid #E5E7EB', padding: '18px 22px', marginBottom: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' },
+  feedback: {
+    background: '#D1FAE5', border: '1px solid #6EE7B7', color: '#065F46',
+    borderRadius: 10, padding: '10px 16px', fontSize: 13, fontWeight: 600, marginBottom: 20,
+  },
+  empty: {
+    background: '#F0FDF4', border: '1px solid #BBF7D0', color: '#065F46',
+    borderRadius: 12, padding: '20px', fontSize: 14, textAlign: 'center' as const,
+  },
+  card: {
+    background: '#fff', borderRadius: 14, border: '1px solid #E5E7EB',
+    padding: '18px 22px', marginBottom: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+  },
   cardRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' as const },
   cardName: { fontWeight: 700, fontSize: 15, color: '#111', marginBottom: 4 },
   cardMeta: { fontSize: 13, color: '#6B7280', marginBottom: 2 },
-  approveBtn: { padding: '9px 18px', background: '#065F46', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer' },
-  rejectBtn: { padding: '9px 18px', background: '#FEF2F2', color: '#991B1B', border: '1px solid #FCA5A5', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer' },
+  approveBtn: {
+    padding: '9px 18px', background: '#065F46', color: '#fff', border: 'none',
+    borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+  },
+  rejectBtn: {
+    padding: '9px 18px', background: '#FEF2F2', color: '#991B1B',
+    border: '1px solid #FCA5A5', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+  },
   table: { width: '100%', borderCollapse: 'collapse' as const, fontSize: 13, minWidth: 800 },
   th: { background: DARK, color: '#fff', padding: '9px 14px', textAlign: 'left' as const, fontSize: 11, fontWeight: 700 },
   td: { padding: '10px 14px', borderBottom: '1px solid #F3F4F6', verticalAlign: 'middle' as const },
   pill: { background: '#EFF6FF', color: '#1E40AF', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 700 },
-  editInput: { padding: '5px 8px', borderRadius: 6, border: '1.5px solid #CBD5E1', fontSize: 12, width: '100%', boxSizing: 'border-box' as const },
-  editBtn: { padding: '5px 12px', background: '#EFF6FF', color: '#1E40AF', border: '1px solid #BFDBFE', borderRadius: 6, fontSize: 12, cursor: 'pointer' },
-  saveBtn: { padding: '5px 10px', background: '#065F46', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer' },
-  cancelBtn: { padding: '5px 10px', background: '#F3F4F6', color: '#374151', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer' },
-  rateInput: { border: '1.5px solid #E5E7EB', borderRadius: 8, padding: '8px 12px', fontSize: 16, fontWeight: 700, width: 130, textAlign: 'right' as const },
+  editInput: {
+    padding: '5px 8px', borderRadius: 6, border: '1.5px solid #CBD5E1',
+    fontSize: 12, width: '100%', boxSizing: 'border-box' as const,
+  },
+  editBtn: {
+    padding: '5px 12px', background: '#EFF6FF', color: '#1E40AF',
+    border: '1px solid #BFDBFE', borderRadius: 6, fontSize: 12, cursor: 'pointer',
+  },
+  saveBtn: {
+    padding: '5px 10px', background: '#065F46', color: '#fff',
+    border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer',
+  },
+  cancelBtn: {
+    padding: '5px 10px', background: '#F3F4F6', color: '#374151',
+    border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer',
+  },
+  rateInput: {
+    border: '1.5px solid #E5E7EB', borderRadius: 8, padding: '8px 12px',
+    fontSize: 16, fontWeight: 700, width: 130, textAlign: 'right' as const,
+  },
   label: { display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 },
-  select: { width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 14, background: '#FAFAFA', cursor: 'pointer' },
-  exportBtn: { padding: '12px 24px', background: BLUE, color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer' },
+  select: {
+    width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #E5E7EB',
+    fontSize: 14, background: '#FAFAFA', cursor: 'pointer',
+  },
+  exportBtn: {
+    padding: '12px 24px', background: BLUE, color: '#fff', border: 'none',
+    borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer',
+  },
 }

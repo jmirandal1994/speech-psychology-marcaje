@@ -1,6 +1,3 @@
-// lib/supabase-server.ts
-// Cliente Supabase para Server Components y middleware
-
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
