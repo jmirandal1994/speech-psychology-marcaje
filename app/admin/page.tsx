@@ -63,9 +63,9 @@ export default function AdminPage() {
       setRates(data || [])
     }
     if (tab === 'reports') {
-      const { data } = await supabase.from('profiles').select('id, full_name, cargo, rut')
+      const { data } = await supabase.from('profiles').select('*')
         .eq('status', 'approved').order('full_name')
-      setUsers(data || [])
+      setUsers((data || []) as Profile[])
     }
     setLoading(false)
   }
