@@ -161,7 +161,7 @@ export default function AdminPage() {
   return (
     <div style={S.root}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
         @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
         .fade-in{animation:fadeIn .25s ease}
@@ -230,7 +230,7 @@ export default function AdminPage() {
             </div>
 
             {activeWorkers.length === 0 ? (
-              <div style={S.empty}><div style={{ fontSize: 40, marginBottom: 12, opacity: .3 }}>◌</div><div style={{ fontWeight: 700, color: '#374151' }}>Sin profesionales activas ahora</div></div>
+              <div style={S.empty}><div style={{ fontSize: 32, marginBottom: 12, opacity: .3 }}>—</div><div style={{ fontWeight: 700, color: '#374151' }}>Sin profesionales activas ahora</div></div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(290px,1fr))', gap: 16, marginBottom: 32 }}>
                 {activeWorkers.map(w => (
@@ -264,7 +264,7 @@ export default function AdminPage() {
             <div style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', letterSpacing: 1, textTransform: 'uppercase', margin: '24px 0 14px' }}>Resumen del día</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14 }}>
               {[{ l: 'Profesionales activas', v: activeWorkers.length, c: '#059669' }, { l: 'Turnos completados', v: Math.max(0, todayCount - activeWorkers.length), c: '#3B82F6' }, { l: 'Total turnos hoy', v: todayCount, c: '#8B5CF6' }].map(s => (
-                <div key={s.l} style={S.sumCard}><div style={{ fontSize: 40, fontWeight: 800, color: s.c, fontFamily: 'Syne,sans-serif' }}>{s.v}</div><div style={{ fontSize: 13, color: '#6B7280', marginTop: 4 }}>{s.l}</div></div>
+                <div key={s.l} style={S.sumCard}><div style={{ fontSize: 40, fontWeight: 800, color: s.c }}>{s.v}</div><div style={{ fontSize: 13, color: '#6B7280', marginTop: 4 }}>{s.l}</div></div>
               ))}
             </div>
           </div>
@@ -386,19 +386,19 @@ const S: Record<string, React.CSSProperties> = {
   root: { display: 'flex', minHeight: '100vh', fontFamily: "'DM Sans',Arial,sans-serif", background: '#F0F4FF' },
   sidebar: { width: 256, flexShrink: 0, display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg,#0A1628 0%,#0D2B5E 60%,#1A4A9A 100%)', minHeight: '100vh', position: 'sticky', top: 0, height: '100vh', overflowY: 'auto' },
   sTop: { display: 'flex', gap: 12, alignItems: 'center', padding: '24px 18px 18px', borderBottom: '1px solid rgba(255,255,255,.08)' },
-  sBrand: { color: '#fff', fontWeight: 700, fontSize: 13, fontFamily: 'Syne,sans-serif' },
+  sBrand: { color: '#fff', fontWeight: 700, fontSize: 13 },
   sSub: { color: 'rgba(255,255,255,.4)', fontSize: 11 },
   adminChip: { display: 'flex', alignItems: 'center', gap: 10, margin: '14px 18px', background: 'rgba(255,255,255,.06)', borderRadius: 10, padding: '10px 12px' },
   dot: { width: 8, height: 8, borderRadius: '50%', background: '#4ADE80', flexShrink: 0 },
   stats: { display: 'flex', gap: 8, padding: '0 18px 14px', borderBottom: '1px solid rgba(255,255,255,.08)' },
   statBox: { flex: 1, background: 'rgba(255,255,255,.06)', borderRadius: 10, padding: '10px 6px', textAlign: 'center' },
-  statN: { color: '#fff', fontWeight: 800, fontSize: 22, fontFamily: 'Syne,sans-serif' },
+  statN: { color: '#fff', fontWeight: 800, fontSize: 22, fontFamily: 'Arial,sans-serif' },
   statL: { color: 'rgba(255,255,255,.4)', fontSize: 10, marginTop: 2, lineHeight: 1.2 },
   navBtn: { width: '100%', padding: '11px 14px', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 500, cursor: 'pointer', textAlign: 'left', transition: 'all .15s', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 },
   logout: { margin: '12px 18px 20px', padding: '10px', background: 'rgba(255,255,255,.06)', color: 'rgba(255,255,255,.5)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 10, fontSize: 12, cursor: 'pointer', textAlign: 'center' },
   main: { flex: 1, padding: '32px 36px', overflowX: 'auto', position: 'relative' },
   hdr: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 },
-  hTitle: { fontSize: 26, fontWeight: 800, color: '#0A1628', margin: 0, fontFamily: 'Syne,sans-serif' },
+  hTitle: { fontSize: 26, fontWeight: 800, color: '#0A1628', margin: 0 },
   hSub: { fontSize: 13, color: '#6B7280', margin: '4px 0 0' },
   toast: { position: 'fixed', top: 24, right: 24, color: '#fff', borderRadius: 12, padding: '12px 20px', fontSize: 13, fontWeight: 600, zIndex: 999, boxShadow: '0 8px 32px rgba(0,0,0,.2)' },
   refreshBtn: { padding: '10px 18px', background: '#fff', color: '#0D2B5E', border: '1.5px solid #E5E7EB', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' },
